@@ -76,6 +76,43 @@ npm run test:e2e       # Playwright end-to-end (builds + starts the app)
 > serially (a single shared database), so point `DATABASE_URL` at a database you
 > are comfortable wiping.
 
+## Deploying to Vercel
+
+The app lives at the repo root, so Vercel auto-detects Next.js.
+
+1. Import this repo in Vercel (or run `vercel link` from the project directory).
+2. Set environment variables for the **Production** environment
+   (Project Settings → Environment Variables):
+
+   | Variable | Value |
+   | --- | --- |
+   | `DATABASE_URL` | Supabase **transaction pooler** string (see below) |
+   | `IP_HASH_SALT` | a long random string |
+   | `NEXT_PUBLIC_BASE_URL` | your production URL, e.g. `https://your-app.vercel.app` |
+
+3. Deploy: `vercel deploy --prod` (or push to the connected Git branch).
+
+### Use the connection pooler, not the direct connection
+
+Vercel's serverless runtime **cannot reach Supabase's direct connection**
+(`db.<ref>.supabase.co:5432`) — it is IPv6-only and Vercel functions can't route
+to it, so every query fails and `GET /api/health` reports `db: "down"`. Use the
+**Transaction pooler** instead (Supabase dashboard → **Connect** →
+**Transaction pooler**). It is IPv4 and built for serverless:
+
+```
+postgresql://postgres.<ref>:<password>@aws-1-<region>.pooler.supabase.com:6543/postgres?sslmode=no-verify
+```
+
+- The host prefix may be `aws-1-` (newer projects) or `aws-0-` — copy the exact
+  host shown in your dashboard.
+- Percent-encode special characters in the password (`@` → `%40`).
+- `?sslmode=no-verify` lets `pg` connect over TLS without rejecting Supabase's
+  self-signed certificate chain.
+
+For **local development** the direct connection (`:5432`) works fine; the pooler
+is only required on serverless.
+
 ## API
 
 Base URL defaults to `http://localhost:3000` (`NEXT_PUBLIC_BASE_URL`).
