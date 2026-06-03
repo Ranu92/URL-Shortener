@@ -1,66 +1,80 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { listRecentLinks } from '@/db/queries';
+import { ShortenForm } from './ShortenForm';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+}
+
+export default async function Home() {
+  const recent = await listRecentLinks();
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="shell">
+      <header className="masthead reveal d1">
+        <span className="kicker">Cutterbar</span>
+        <span className="edition">Link Routing Desk · No. 001</span>
+      </header>
+
+      <section className="hero reveal d2">
+        <h1>
+          Long links,
+          <br />
+          <em>cut short.</em>
+        </h1>
+        <p>
+          Paste any address and Cutterbar mints a short, durable code that
+          forwards on click — and quietly keeps the tally.
+        </p>
+      </section>
+
+      <div className="reveal d3">
+        <ShortenForm />
+      </div>
+
+      <section className="ledger reveal d4">
+        <h2>
+          <span>Recent dispatches</span>
+          <span>{recent.length} on file</span>
+        </h2>
+
+        {recent.length === 0 ? (
+          <p className="empty">
+            Nothing routed yet. The first short link you make lands here.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        ) : (
+          <ol>
+            {recent.map((link, i) => (
+              <li key={link.id}>
+                <span className="num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="body">
+                  <a className="code" href={`${base}/${link.shortCode}`}>
+                    {link.shortCode}
+                  </a>
+                  <span className="target" title={link.originalUrl}>
+                    → {hostOf(link.originalUrl)}
+                  </span>
+                </span>
+                <span className="clicks">
+                  <b>{link.clickCount}</b>
+                  <span>clicks</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <footer className="colophon">
+        <span>Self-hosted · Next.js + Postgres</span>
+        <span>Base62 · 7-char codes</span>
+      </footer>
+    </main>
   );
 }
