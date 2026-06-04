@@ -1,0 +1,2 @@
+ALTER TABLE "clicks" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "links" ENABLE ROW LEVEL SECURITY;
