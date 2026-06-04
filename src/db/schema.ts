@@ -11,7 +11,7 @@ export const links = pgTable(
     createdAt: t.timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [t.uniqueIndex('links_short_code_idx').on(table.shortCode)],
-);
+).enableRLS();
 
 export const clicks = pgTable(
   'clicks',
@@ -27,7 +27,7 @@ export const clicks = pgTable(
     ipHash: t.varchar('ip_hash', { length: 64 }),
   },
   (table) => [t.index('clicks_link_id_idx').on(table.linkId)],
-);
+).enableRLS();
 
 export type Link = typeof links.$inferSelect;
 export type NewLink = typeof links.$inferInsert;
